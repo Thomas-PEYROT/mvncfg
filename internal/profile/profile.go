@@ -78,3 +78,64 @@ func Use(cfg *config.M2Config, name string) error {
 
 	return nil
 }
+
+const defaultProfileContent = `<?xml version="1.0" encoding="UTF-8"?>
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 https://maven.apache.org/xsd/settings-1.0.0.xsd">
+</settings>
+`
+
+// Init creates the ~/.m2/profiles directory and a default profile.
+// If an existing settings.xml is a regular file, it is backed up as the default profile.
+// Finally, settings.xml is symlinked to the default profile.
+func Init(cfg *config.M2Config) error {
+	profilesDir := cfg.ProfilesDir()
+	if err := os.MkdirAll(profilesDir, 0o755); err != nil {
+		return fmt.Errorf("cannot create profiles directory: %w", err)
+	}
+
+	settingsPath := cfg.SettingsPath()
+	defaultProfilePath := cfg.ProfilePath("default")
+
+	info, err := os.Lstat(settingsPath)
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		return fmt.Errorf("cannot inspect settings.xml: %w", err)
+	}
+
+	if err == nil {
+		switch {
+		case info.Mode()&os.ModeSymlink != 0:
+			// settings.xml is already a symlink. Keep the existing target profile intact
+			// and just ensure the symlink stays in place.
+		case info.Mode().IsRegular():
+			// Backup the existing settings.xml as the default profile.
+			if err := os.Rename(settingsPath, defaultProfilePath); err != nil {
+				return fmt.Errorf("cannot backup existing settings.xml: %w", err)
+			}
+		default:
+			return fmt.Errorf("settings.xml exists but is not a regular file or symlink")
+		}
+	}
+
+	// Create a default profile if none exists yet.
+	if _, err := os.Stat(defaultProfilePath); err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			if err := os.WriteFile(defaultProfilePath, []byte(defaultProfileContent), 0o644); err != nil {
+				return fmt.Errorf("cannot create default profile: %w", err)
+			}
+		} else {
+			return fmt.Errorf("cannot access default profile: %w", err)
+		}
+	}
+
+	// Ensure settings.xml points to the default profile.
+	if err := os.Remove(settingsPath); err != nil && !errors.Is(err, os.ErrNotExist) {
+		return fmt.Errorf("cannot replace settings.xml: %w", err)
+	}
+	if err := os.Symlink(defaultProfilePath, settingsPath); err != nil {
+		return fmt.Errorf("cannot link settings.xml to default profile: %w", err)
+	}
+
+	return nil
+}

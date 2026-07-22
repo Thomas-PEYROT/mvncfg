@@ -15,7 +15,7 @@ const bashCompletion = `_mvncfg() {
     local cur prev commands
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
-    commands="list current use completion help install-completion"
+    commands="list current use init completion help install-completion"
 
     if [ "$prev" = "use" ]; then
         COMPREPLY=( $(compgen -W "$(mvncfg list)" -- "$cur") )
@@ -40,7 +40,7 @@ _mvncfg() {
 
     case "$state" in
         command)
-            _values 'commands' list current use completion help install-completion
+            _values 'commands' list current use init completion help install-completion
             ;;
         args)
             case "$line[1]" in

@@ -51,6 +51,12 @@ func run(args []string) error {
 		return cmdCompletion(args[1])
 	case "install-completion":
 		return completion.Install()
+	case "init":
+		cfg, err := config.New()
+		if err != nil {
+			return err
+		}
+		return cmdInit(cfg)
 	case "help", "--help", "-h":
 		printUsage()
 		return nil
@@ -99,6 +105,14 @@ func cmdCompletion(shell string) error {
 	return nil
 }
 
+func cmdInit(cfg *config.M2Config) error {
+	if err := profile.Init(cfg); err != nil {
+		return err
+	}
+	fmt.Println("Initialized mvncfg with a default profile")
+	return nil
+}
+
 func printUsage() {
 	fmt.Print(usageText())
 }
@@ -108,6 +122,7 @@ func usageText() string {
   mvncfg list
   mvncfg current
   mvncfg use <profile>
+  mvncfg init
   mvncfg install-completion
 `
 }

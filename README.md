@@ -6,6 +6,7 @@ A tiny CLI to switch between Maven `settings.xml` profiles using symlinks.
 
 ## Features
 
+- `init` — initialize the `~/.m2/profiles` directory and a default profile.
 - `list` — list available Maven profiles.
 - `current` — show the active profile.
 - `use <profile>` — switch to another profile.
@@ -85,6 +86,7 @@ source ~/.bashrc   # or ~/.zshrc
 ## Usage
 
 ```bash
+mvncfg init                  # initialize profiles directory and default profile
 mvncfg list                  # list available profiles
 mvncfg current               # show the active profile
 mvncfg use <profile>         # activate a profile
