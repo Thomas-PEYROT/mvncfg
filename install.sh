@@ -11,8 +11,10 @@ SHELL_NAME=$(basename "$SHELL_NAME")
 
 INSTALL_DIR="${INSTALL_DIR:-$HOME/.local/bin}"
 
-echo "Building mvncfg..."
-go build -o "$INSTALL_DIR/mvncfg" ./cmd/mvncfg
+VERSION="$(git describe --tags --always --dirty 2>/dev/null || echo dev)"
+
+echo "Building mvncfg ($VERSION)..."
+go build -ldflags "-s -w -X main.version=$VERSION" -o "$INSTALL_DIR/mvncfg" ./cmd/mvncfg
 
 echo "Installing $SHELL_NAME completion..."
 SHELL="$SHELL_NAME" "$INSTALL_DIR/mvncfg" install-completion

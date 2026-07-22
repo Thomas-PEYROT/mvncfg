@@ -17,6 +17,9 @@ type commandInfo struct {
 	example     string
 }
 
+// version is set at build time via -ldflags.
+var version = "dev"
+
 var commands = []commandInfo{
 	{
 		name:        "init",
@@ -71,6 +74,12 @@ var commands = []commandInfo{
 		usage:       "mvncfg help [command]",
 		description: "Show this help message or detailed help for a command.",
 		example:     "mvncfg help use",
+	},
+	{
+		name:        "version",
+		usage:       "mvncfg version",
+		description: "Show the version of mvncfg.",
+		example:     "mvncfg version",
 	},
 }
 
@@ -140,6 +149,9 @@ func run(args []string) error {
 			return err
 		}
 		return cmdDelete(cfg, args[1])
+	case "version", "--version", "-v":
+		fmt.Println(version)
+		return nil
 	case "help", "--help", "-h":
 		printHelp(args[1:])
 		return nil

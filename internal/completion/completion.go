@@ -15,7 +15,7 @@ const bashCompletion = `_mvncfg() {
     local cur prev commands shells
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
-    commands="init list current use create delete install-completion completion help"
+    commands="init list current use create delete install-completion completion help version"
     shells="bash zsh"
 
     if [ "$prev" = "use" ]; then
@@ -44,6 +44,7 @@ cmd_list=(
     'install-completion:install shell completion'
     'completion:print the raw completion script'
     'help:show help for a command'
+    'version:show the version'
 )
 shell_list=(bash zsh)
 

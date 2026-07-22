@@ -36,7 +36,7 @@ jobs:
           GOARCH: ${{ matrix.goarch }}
         run: |
           output="mvncfg-${{ matrix.goos }}-${{ matrix.goarch }}"
-          go build -ldflags="-s -w" -o "$output" ./cmd/mvncfg
+          go build -ldflags="-s -w -X main.version=${{ github.ref_name }}" -o "$output" ./cmd/mvncfg
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
