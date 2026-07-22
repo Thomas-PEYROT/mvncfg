@@ -15,11 +15,12 @@ const bashCompletion = `_mvncfg() {
     local cur prev commands shells
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
-    commands="init list current use create delete install-completion completion help version"
+    commands="init list current use create delete rename install-completion completion help version"
     shells="bash zsh"
+    profiles="$(mvncfg list)"
 
-    if [ "$prev" = "use" ]; then
-        COMPREPLY=( $(compgen -W "$(mvncfg list)" -- "$cur") )
+    if [ "$prev" = "use" ] || [ "$prev" = "rename" ]; then
+        COMPREPLY=( $(compgen -W "$profiles" -- "$cur") )
     elif [ "$prev" = "completion" ]; then
         COMPREPLY=( $(compgen -W "$shells" -- "$cur") )
     elif [ "$prev" = "help" ]; then
@@ -41,6 +42,7 @@ cmd_list=(
     'use:activate a profile'
     'create:create a new profile from a default template'
     'delete:delete a profile'
+    'rename:rename a profile'
     'install-completion:install shell completion'
     'completion:print the raw completion script'
     'help:show help for a command'
@@ -62,7 +64,7 @@ _mvncfg() {
             ;;
         args)
             case "$line[1]" in
-                use)
+                use|rename)
                     _values 'profiles' $(mvncfg list)
                     ;;
                 completion)

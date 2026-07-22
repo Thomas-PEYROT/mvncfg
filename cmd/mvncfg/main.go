@@ -58,6 +58,12 @@ var commands = []commandInfo{
 		example:     "mvncfg delete work",
 	},
 	{
+		name:        "rename",
+		usage:       "mvncfg rename <old> <new>",
+		description: "Rename a Maven profile. If it is the active profile, the symlink is updated.",
+		example:     "mvncfg rename work personal",
+	},
+	{
 		name:        "install-completion",
 		usage:       "mvncfg install-completion",
 		description: "Install shell completion for bash or zsh.",
@@ -149,6 +155,15 @@ func run(args []string) error {
 			return err
 		}
 		return cmdDelete(cfg, args[1])
+	case "rename":
+		if len(args) < 3 {
+			return fmt.Errorf("usage: mvncfg rename <old> <new>")
+		}
+		cfg, err := config.New()
+		if err != nil {
+			return err
+		}
+		return cmdRename(cfg, args[1], args[2])
 	case "version", "--version", "-v":
 		fmt.Println(version)
 		return nil
@@ -221,6 +236,14 @@ func cmdDelete(cfg *config.M2Config, name string) error {
 		return err
 	}
 	fmt.Printf("Deleted profile %s\n", name)
+	return nil
+}
+
+func cmdRename(cfg *config.M2Config, oldName, newName string) error {
+	if err := profile.Rename(cfg, oldName, newName); err != nil {
+		return err
+	}
+	fmt.Printf("Renamed profile %s to %s\n", oldName, newName)
 	return nil
 }
 

@@ -271,3 +271,46 @@ func Delete(cfg *config.M2Config, name string) error {
 
 	return nil
 }
+
+// Rename renames a profile. If the renamed profile is the active one,
+// the settings.xml symlink is updated to point to the new name.
+func Rename(cfg *config.M2Config, oldName, newName string) error {
+	if strings.TrimSpace(oldName) == "" || strings.TrimSpace(newName) == "" {
+		return fmt.Errorf("profile names cannot be empty")
+	}
+	if oldName == newName {
+		return fmt.Errorf("old and new profile names are the same")
+	}
+
+	oldPath := cfg.ProfilePath(oldName)
+	if _, err := os.Stat(oldPath); err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return fmt.Errorf("unknown profile: %s", oldName)
+		}
+		return fmt.Errorf("cannot access profile %s: %w", oldName, err)
+	}
+
+	newPath := cfg.ProfilePath(newName)
+	if _, err := os.Stat(newPath); err == nil {
+		return fmt.Errorf("profile already exists: %s", newName)
+	} else if !errors.Is(err, os.ErrNotExist) {
+		return fmt.Errorf("cannot access profile %s: %w", newName, err)
+	}
+
+	if err := os.Rename(oldPath, newPath); err != nil {
+		return fmt.Errorf("cannot rename profile %s to %s: %w", oldName, newName, err)
+	}
+
+	current, err := Current(cfg)
+	if err == nil && current == oldName {
+		settingsPath := cfg.SettingsPath()
+		if err := os.Remove(settingsPath); err != nil {
+			return fmt.Errorf("cannot update settings.xml symlink: %w", err)
+		}
+		if err := os.Symlink(newPath, settingsPath); err != nil {
+			return fmt.Errorf("cannot relink settings.xml to %s: %w", newName, err)
+		}
+	}
+
+	return nil
+}
