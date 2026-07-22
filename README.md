@@ -11,6 +11,7 @@ A tiny CLI to switch between Maven `settings.xml` profiles using symlinks.
 - `current` — show the active profile.
 - `use <profile>` — switch to another profile.
 - `create <profile>` — create a new profile from a default `settings.xml` template.
+- `delete <profile>` — delete a profile (cannot delete the active one).
 - `install-completion` — set up shell completion for bash or zsh.
 
 ## Requirements
@@ -92,6 +93,7 @@ mvncfg list                  # list available profiles
 mvncfg current               # show the active profile
 mvncfg use <profile>         # activate a profile
 mvncfg create <profile>      # create a new profile from a default template
+mvncfg delete <profile>      # delete a profile (not the active one)
 mvncfg install-completion    # install shell completion
 mvncfg completion <bash|zsh> # print the raw completion script
 mvncfg help [command]        # show help

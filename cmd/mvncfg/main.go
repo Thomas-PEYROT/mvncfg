@@ -49,6 +49,12 @@ var commands = []commandInfo{
 		example:     "mvncfg create work",
 	},
 	{
+		name:        "delete",
+		usage:       "mvncfg delete <profile>",
+		description: "Delete a Maven profile. The active profile cannot be deleted.",
+		example:     "mvncfg delete work",
+	},
+	{
 		name:        "install-completion",
 		usage:       "mvncfg install-completion",
 		description: "Install shell completion for bash or zsh.",
@@ -125,6 +131,15 @@ func run(args []string) error {
 			return err
 		}
 		return cmdCreate(cfg, args[1])
+	case "delete":
+		if len(args) < 2 {
+			return fmt.Errorf("usage: mvncfg delete <profile>")
+		}
+		cfg, err := config.New()
+		if err != nil {
+			return err
+		}
+		return cmdDelete(cfg, args[1])
 	case "help", "--help", "-h":
 		printHelp(args[1:])
 		return nil
@@ -186,6 +201,14 @@ func cmdCreate(cfg *config.M2Config, name string) error {
 		return err
 	}
 	fmt.Printf("Created profile %s\n", name)
+	return nil
+}
+
+func cmdDelete(cfg *config.M2Config, name string) error {
+	if err := profile.Delete(cfg, name); err != nil {
+		return err
+	}
+	fmt.Printf("Deleted profile %s\n", name)
 	return nil
 }
 

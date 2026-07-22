@@ -244,3 +244,30 @@ func Create(cfg *config.M2Config, name string) error {
 
 	return nil
 }
+
+// Delete removes a profile file.
+// It refuses to delete the currently active profile to avoid breaking the settings.xml symlink.
+func Delete(cfg *config.M2Config, name string) error {
+	if strings.TrimSpace(name) == "" {
+		return fmt.Errorf("profile name cannot be empty")
+	}
+
+	current, err := Current(cfg)
+	if err == nil && current == name {
+		return fmt.Errorf("cannot delete the active profile: %s (switch to another profile first)", name)
+	}
+
+	profilePath := cfg.ProfilePath(name)
+	if _, err := os.Stat(profilePath); err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return fmt.Errorf("unknown profile: %s", name)
+		}
+		return fmt.Errorf("cannot access profile %s: %w", name, err)
+	}
+
+	if err := os.Remove(profilePath); err != nil {
+		return fmt.Errorf("cannot delete profile %s: %w", name, err)
+	}
+
+	return nil
+}
