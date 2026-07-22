@@ -92,6 +92,7 @@ mvncfg current               # show the active profile
 mvncfg use <profile>         # activate a profile
 mvncfg install-completion    # install shell completion
 mvncfg completion <bash|zsh> # print the raw completion script
+mvncfg help [command]        # show help
 ```
 
 ## File layout

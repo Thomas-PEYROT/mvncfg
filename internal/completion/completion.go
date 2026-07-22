@@ -12,15 +12,18 @@ func Zsh() string {
 }
 
 const bashCompletion = `_mvncfg() {
-    local cur prev commands
+    local cur prev commands shells
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
-    commands="list current use init completion help install-completion"
+    commands="init list current use install-completion completion help"
+    shells="bash zsh"
 
     if [ "$prev" = "use" ]; then
         COMPREPLY=( $(compgen -W "$(mvncfg list)" -- "$cur") )
     elif [ "$prev" = "completion" ]; then
-        COMPREPLY=( $(compgen -W "bash zsh" -- "$cur") )
+        COMPREPLY=( $(compgen -W "$shells" -- "$cur") )
+    elif [ "$prev" = "help" ]; then
+        COMPREPLY=( $(compgen -W "$commands" -- "$cur") )
     else
         COMPREPLY=( $(compgen -W "$commands" -- "$cur") )
     fi
@@ -29,6 +32,18 @@ complete -F _mvncfg mvncfg
 `
 
 const zshCompletion = `#compdef mvncfg
+
+local -a cmd_list shell_list
+cmd_list=(
+    'init:initialize the profiles directory and default profile'
+    'list:list available profiles'
+    'current:show the active profile'
+    'use:activate a profile'
+    'install-completion:install shell completion'
+    'completion:print the raw completion script'
+    'help:show help for a command'
+)
+shell_list=(bash zsh)
 
 _mvncfg() {
     local curcontext=$curcontext state line
@@ -40,7 +55,7 @@ _mvncfg() {
 
     case "$state" in
         command)
-            _values 'commands' list current use init completion help install-completion
+            _describe -t commands 'mvncfg commands' cmd_list
             ;;
         args)
             case "$line[1]" in
@@ -48,7 +63,10 @@ _mvncfg() {
                     _values 'profiles' $(mvncfg list)
                     ;;
                 completion)
-                    _values 'shells' bash zsh
+                    _describe -t shells 'shell' shell_list
+                    ;;
+                help)
+                    _describe -t commands 'command' cmd_list
                     ;;
             esac
             ;;

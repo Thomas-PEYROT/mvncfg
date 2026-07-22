@@ -3,11 +3,64 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/Thomas-PEYROT/mvncfg/internal/completion"
 	"github.com/Thomas-PEYROT/mvncfg/internal/config"
 	"github.com/Thomas-PEYROT/mvncfg/internal/profile"
 )
+
+type commandInfo struct {
+	name        string
+	usage       string
+	description string
+	example     string
+}
+
+var commands = []commandInfo{
+	{
+		name:        "init",
+		usage:       "mvncfg init",
+		description: "Initialize the ~/.m2/profiles directory and create a default profile.",
+		example:     "mvncfg init",
+	},
+	{
+		name:        "list",
+		usage:       "mvncfg list",
+		description: "List all available Maven profiles in ~/.m2/profiles.",
+		example:     "mvncfg list",
+	},
+	{
+		name:        "current",
+		usage:       "mvncfg current",
+		description: "Show the profile currently active via the ~/.m2/settings.xml symlink.",
+		example:     "mvncfg current",
+	},
+	{
+		name:        "use",
+		usage:       "mvncfg use <profile>",
+		description: "Activate a Maven profile by symlinking ~/.m2/settings.xml to it.",
+		example:     "mvncfg use work",
+	},
+	{
+		name:        "install-completion",
+		usage:       "mvncfg install-completion",
+		description: "Install shell completion for bash or zsh.",
+		example:     "mvncfg install-completion",
+	},
+	{
+		name:        "completion",
+		usage:       "mvncfg completion <bash|zsh>",
+		description: "Print the raw completion script for the given shell.",
+		example:     "mvncfg completion bash",
+	},
+	{
+		name:        "help",
+		usage:       "mvncfg help [command]",
+		description: "Show this help message or detailed help for a command.",
+		example:     "mvncfg help use",
+	},
+}
 
 func main() {
 	if err := run(os.Args[1:]); err != nil {
@@ -58,7 +111,7 @@ func run(args []string) error {
 		}
 		return cmdInit(cfg)
 	case "help", "--help", "-h":
-		printUsage()
+		printHelp(args[1:])
 		return nil
 	default:
 		return fmt.Errorf("unknown command: %s\n\n%s", args[0], usageText())
@@ -118,11 +171,32 @@ func printUsage() {
 }
 
 func usageText() string {
-	return `Commands:
-  mvncfg list
-  mvncfg current
-  mvncfg use <profile>
-  mvncfg init
-  mvncfg install-completion
-`
+	var b strings.Builder
+	b.WriteString("mvncfg — switch between Maven settings.xml profiles\n\n")
+	b.WriteString("Usage:\n  mvncfg <command> [args]\n\n")
+	b.WriteString("Commands:\n")
+	for _, cmd := range commands {
+		b.WriteString(fmt.Sprintf("  %-20s %s\n", cmd.name, cmd.description))
+	}
+	b.WriteString("\nRun 'mvncfg help <command>' for more information on a command.\n")
+	return b.String()
+}
+
+func printHelp(args []string) {
+	if len(args) == 0 {
+		fmt.Print(usageText())
+		return
+	}
+
+	name := args[0]
+	for _, cmd := range commands {
+		if cmd.name == name {
+			fmt.Printf("%s\n\n", cmd.usage)
+			fmt.Printf("Description:\n  %s\n\n", cmd.description)
+			fmt.Printf("Example:\n  %s\n", cmd.example)
+			return
+		}
+	}
+
+	fmt.Printf("Unknown command: %s\n\n%s", name, usageText())
 }
