@@ -1,47 +1,47 @@
 # mvncfg
 
-Gestionnaire de profils Maven minimaliste. Passe d'un `settings.xml` à l'autre via un symlink dans `~/.m2`.
+Minimalist Maven profile manager. Switches between `settings.xml` files using a symlink in `~/.m2`.
 
 ## Installation
 
-### Depuis un clone local (recommandé)
+### From a local clone (recommended)
 
-Le script `install.sh` compile le binaire, le copie dans `~/.local/bin` et configure la completion pour ton shell :
+The `install.sh` script builds the binary, copies it to `~/.local/bin`, and sets up shell completion:
 
 ```bash
 cd /home/tpe/Bureau/Perso/mvncfg
 ./install.sh
 ```
 
-Par défaut, le script détecte ton shell (`$SHELL`). Pour forcer un shell particulier :
+By default, it detects your shell (`$SHELL`). To force a specific shell:
 
 ```bash
 ./install.sh zsh
-# ou
+# or
 ./install.sh bash
 ```
 
-Sinon, tu peux aussi compiler manuellement :
+Alternatively, you can build manually:
 
 ```bash
 cd /home/tpe/Bureau/Perso/mvncfg
 go build -o ~/.local/bin/mvncfg ./cmd/mvncfg
 ```
 
-Ou via `go install` :
+Or use `go install`:
 
 ```bash
 cd /home/tpe/Bureau/Perso/mvncfg
 go install ./cmd/mvncfg
 ```
 
-Le binaire sera alors dans `$HOME/go/bin` (ou `$GOPATH/bin`).
+The binary will be placed in `$HOME/go/bin` (or `$GOPATH/bin`).
 
-### Depuis une release GitHub
+### From a GitHub release
 
-Une fois le repo public, les releases publieront des binaires précompilés pour Linux et macOS (amd64 et arm64). Windows n'est pas supporté pour l'instant.
+Precompiled binaries are published for Linux and macOS (amd64 and arm64). Windows is not supported yet.
 
-Exemple pour Linux amd64 :
+Example for Linux amd64:
 
 ```bash
 curl -sL -o ~/.local/bin/mvncfg https://github.com/Thomas-PEYROT/mvncfg/releases/latest/download/mvncfg-linux-amd64
@@ -49,37 +49,37 @@ chmod +x ~/.local/bin/mvncfg
 mvncfg install-completion
 ```
 
-### Via go install (une fois le repo public)
+### Via `go install`
 
 ```bash
 go install github.com/Thomas-PEYROT/mvncfg/cmd/mvncfg@latest
 mvncfg install-completion
 ```
 
-## Configuration de l'autocomplétion
+## Shell completion setup
 
-Après avoir installé le binaire :
+After installing the binary:
 
 ```bash
 mvncfg install-completion
 ```
 
-Cette commande détecte ton shell (`bash` ou `zsh`) et configure la completion automatiquement. Il te suffit ensuite de recharger ton shell :
+This detects your shell (`bash` or `zsh`) and configures completion automatically. Then reload your shell:
 
 ```bash
-source ~/.bashrc   # ou source ~/.zshrc
+source ~/.bashrc   # or ~/.zshrc
 ```
 
-## Utilisation
+## Usage
 
 ```bash
-mvncfg list                  # liste les profils disponibles
-mvncfg current               # affiche le profil actif
-mvncfg use <profile>         # active un profil
-mvncfg install-completion    # installe la completion pour le shell courant
+mvncfg list                  # list available profiles
+mvncfg current               # show the active profile
+mvncfg use <profile>         # activate a profile
+mvncfg install-completion    # install completion for the current shell
 ```
 
-## Organisation des fichiers
+## File layout
 
 ```
 ~/.m2/
@@ -90,7 +90,7 @@ mvncfg install-completion    # installe la completion pour le shell courant
 └── settings.xml -> profiles/work.xml
 ```
 
-## Développement
+## Development
 
 ```bash
 go test ./...
