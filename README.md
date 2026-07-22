@@ -37,10 +37,23 @@ go install ./cmd/mvncfg
 
 Le binaire sera alors dans `$HOME/go/bin` (ou `$GOPATH/bin`).
 
-### Une fois le repo public
+### Depuis une release GitHub
+
+Une fois le repo public, les releases publieront des binaires précompilés pour Linux et macOS (amd64 et arm64). Windows n'est pas supporté pour l'instant.
+
+Exemple pour Linux amd64 :
+
+```bash
+curl -sL -o ~/.local/bin/mvncfg https://github.com/Thomas-PEYROT/mvncfg/releases/latest/download/mvncfg-linux-amd64
+chmod +x ~/.local/bin/mvncfg
+mvncfg install-completion
+```
+
+### Via go install (une fois le repo public)
 
 ```bash
 go install github.com/Thomas-PEYROT/mvncfg/cmd/mvncfg@latest
+mvncfg install-completion
 ```
 
 ## Configuration de l'autocomplétion
