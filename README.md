@@ -1,62 +1,74 @@
 # mvncfg
 
-Minimalist Maven profile manager. Switches between `settings.xml` files using a symlink in `~/.m2`.
+[![CI](https://github.com/Thomas-PEYROT/mvncfg/actions/workflows/ci.yml/badge.svg)](https://github.com/Thomas-PEYROT/mvncfg/actions/workflows/ci.yml)
+
+A tiny CLI to switch between Maven `settings.xml` profiles using symlinks.
+
+## Features
+
+- `list` — list available Maven profiles.
+- `current` — show the active profile.
+- `use <profile>` — switch to another profile.
+- `install-completion` — set up shell completion for bash or zsh.
+
+## Requirements
+
+- Go 1.26+ (only for `go install` or building from source).
+- Linux or macOS. Windows is not supported yet because `mvncfg` relies on symlinks.
 
 ## Installation
 
-### From a local clone (recommended)
+### Quick install
 
-The `install.sh` script builds the binary, copies it to `~/.local/bin`, and sets up shell completion:
-
-```bash
-cd /home/tpe/Bureau/Perso/mvncfg
-./install.sh
-```
-
-By default, it detects your shell (`$SHELL`). To force a specific shell:
+Clone the repository and run the install script:
 
 ```bash
-./install.sh zsh
-# or
-./install.sh bash
+git clone https://github.com/Thomas-PEYROT/mvncfg.git && cd mvncfg && ./install.sh
 ```
 
-Alternatively, you can build manually:
+### Using `go install`
 
 ```bash
-cd /home/tpe/Bureau/Perso/mvncfg
-go build -o ~/.local/bin/mvncfg ./cmd/mvncfg
+go install github.com/Thomas-PEYROT/mvncfg/cmd/mvncfg@latest
 ```
 
-Or use `go install`:
-
-```bash
-cd /home/tpe/Bureau/Perso/mvncfg
-go install ./cmd/mvncfg
-```
-
-The binary will be placed in `$HOME/go/bin` (or `$GOPATH/bin`).
+Make sure `$HOME/go/bin` (or `$GOPATH/bin`) is in your `PATH`.
 
 ### From a GitHub release
 
-Precompiled binaries are published for Linux and macOS (amd64 and arm64). Windows is not supported yet.
+Download the binary for your platform from the [releases page](https://github.com/Thomas-PEYROT/mvncfg/releases), make it executable, and place it in a directory in your `PATH`.
 
 Example for Linux amd64:
 
 ```bash
 curl -sL -o ~/.local/bin/mvncfg https://github.com/Thomas-PEYROT/mvncfg/releases/latest/download/mvncfg-linux-amd64
 chmod +x ~/.local/bin/mvncfg
-mvncfg install-completion
 ```
 
-### Via `go install`
+### From source
 
 ```bash
-go install github.com/Thomas-PEYROT/mvncfg/cmd/mvncfg@latest
-mvncfg install-completion
+git clone https://github.com/Thomas-PEYROT/mvncfg.git
+cd mvncfg
+go build -o ~/.local/bin/mvncfg ./cmd/mvncfg
 ```
 
-## Shell completion setup
+Or use the provided install script from the clone:
+
+```bash
+git clone https://github.com/Thomas-PEYROT/mvncfg.git
+cd mvncfg
+./install.sh
+```
+
+By default, `./install.sh` installs to `~/.local/bin` and configures completion for your current shell. You can force a specific shell:
+
+```bash
+./install.sh zsh
+./install.sh bash
+```
+
+## Shell completion
 
 After installing the binary:
 
@@ -64,7 +76,7 @@ After installing the binary:
 mvncfg install-completion
 ```
 
-This detects your shell (`bash` or `zsh`) and configures completion automatically. Then reload your shell:
+Then reload your shell:
 
 ```bash
 source ~/.bashrc   # or ~/.zshrc
@@ -76,10 +88,13 @@ source ~/.bashrc   # or ~/.zshrc
 mvncfg list                  # list available profiles
 mvncfg current               # show the active profile
 mvncfg use <profile>         # activate a profile
-mvncfg install-completion    # install completion for the current shell
+mvncfg install-completion    # install shell completion
+mvncfg completion <bash|zsh> # print the raw completion script
 ```
 
 ## File layout
+
+`mvncfg` expects Maven profiles to live in `~/.m2/profiles/` and manages the active configuration via a symlink at `~/.m2/settings.xml`.
 
 ```
 ~/.m2/
@@ -96,3 +111,11 @@ mvncfg install-completion    # install completion for the current shell
 go test ./...
 go build ./cmd/mvncfg
 ```
+
+## Platform support
+
+| Platform | Architecture | Status |
+|----------|--------------|--------|
+| Linux    | amd64, arm64 | ✅ supported |
+| macOS    | amd64, arm64 | ✅ supported |
+| Windows  | —            | ❌ not supported |
