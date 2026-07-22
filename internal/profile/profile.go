@@ -79,10 +79,89 @@ func Use(cfg *config.M2Config, name string) error {
 	return nil
 }
 
-const defaultProfileContent = `<?xml version="1.0" encoding="UTF-8"?>
+const defaultSettingsXML = `<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Maven settings.xml
+  Documentation: https://maven.apache.org/settings.html
+-->
 <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
           xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 https://maven.apache.org/xsd/settings-1.0.0.xsd">
+
+  <!-- Local repository path -->
+  <!-- <localRepository>${user.home}/.m2/repository</localRepository> -->
+
+  <!-- Interactive mode: false disables prompting -->
+  <interactiveMode>true</interactiveMode>
+
+  <!-- Offline mode: set to true to prevent Maven from connecting to the network -->
+  <offline>false</offline>
+
+  <!-- Plugin groups searched when a plugin prefix is used -->
+  <pluginGroups>
+    <pluginGroup>org.apache.maven.plugins</pluginGroup>
+    <pluginGroup>org.codehaus.mojo</pluginGroup>
+  </pluginGroups>
+
+  <!-- Servers: credentials for repositories and mirrors -->
+  <servers>
+    <!--
+    <server>
+      <id>my-server</id>
+      <username>username</username>
+      <password>{COQLCE6DU6GtcS5P=}</password>
+    </server>
+    -->
+  </servers>
+
+  <!-- Mirrors: redirect requests to a different server -->
+  <mirrors>
+    <!--
+    <mirror>
+      <id>mirror-central</id>
+      <url>https://my-mirror.example.com/maven2</url>
+      <mirrorOf>central</mirrorOf>
+    </mirror>
+    -->
+  </mirrors>
+
+  <!-- Proxies: network proxy configuration -->
+  <proxies>
+    <!--
+    <proxy>
+      <id>my-proxy</id>
+      <active>true</active>
+      <protocol>http</protocol>
+      <host>proxy.example.com</host>
+      <port>8080</port>
+      <nonProxyHosts>localhost|*.example.com</nonProxyHosts>
+    </proxy>
+    -->
+  </proxies>
+
+  <!-- Profiles: environment-specific configuration -->
+  <profiles>
+    <!--
+    <profile>
+      <id>example</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <repositories>
+        <repository>
+          <id>example-repo</id>
+          <url>https://example.com/maven2</url>
+        </repository>
+      </repositories>
+    </profile>
+    -->
+  </profiles>
+
+  <!-- Active profiles applied by default -->
+  <activeProfiles>
+    <!-- <activeProfile>example</activeProfile> -->
+  </activeProfiles>
+
 </settings>
 `
 
@@ -121,7 +200,7 @@ func Init(cfg *config.M2Config) error {
 	// Create a default profile if none exists yet.
 	if _, err := os.Stat(defaultProfilePath); err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			if err := os.WriteFile(defaultProfilePath, []byte(defaultProfileContent), 0o644); err != nil {
+			if err := os.WriteFile(defaultProfilePath, []byte(defaultSettingsXML), 0o644); err != nil {
 				return fmt.Errorf("cannot create default profile: %w", err)
 			}
 		} else {
@@ -135,6 +214,32 @@ func Init(cfg *config.M2Config) error {
 	}
 	if err := os.Symlink(defaultProfilePath, settingsPath); err != nil {
 		return fmt.Errorf("cannot link settings.xml to default profile: %w", err)
+	}
+
+	return nil
+}
+
+// Create creates a new profile with a default settings.xml template.
+// It returns an error if the profile already exists.
+func Create(cfg *config.M2Config, name string) error {
+	if strings.TrimSpace(name) == "" {
+		return fmt.Errorf("profile name cannot be empty")
+	}
+
+	profilesDir := cfg.ProfilesDir()
+	if err := os.MkdirAll(profilesDir, 0o755); err != nil {
+		return fmt.Errorf("cannot create profiles directory: %w", err)
+	}
+
+	profilePath := cfg.ProfilePath(name)
+	if _, err := os.Stat(profilePath); err == nil {
+		return fmt.Errorf("profile already exists: %s", name)
+	} else if !errors.Is(err, os.ErrNotExist) {
+		return fmt.Errorf("cannot access profile %s: %w", name, err)
+	}
+
+	if err := os.WriteFile(profilePath, []byte(defaultSettingsXML), 0o644); err != nil {
+		return fmt.Errorf("cannot create profile %s: %w", name, err)
 	}
 
 	return nil

@@ -43,6 +43,12 @@ var commands = []commandInfo{
 		example:     "mvncfg use work",
 	},
 	{
+		name:        "create",
+		usage:       "mvncfg create <profile>",
+		description: "Create a new Maven profile from a default settings.xml template.",
+		example:     "mvncfg create work",
+	},
+	{
 		name:        "install-completion",
 		usage:       "mvncfg install-completion",
 		description: "Install shell completion for bash or zsh.",
@@ -110,6 +116,15 @@ func run(args []string) error {
 			return err
 		}
 		return cmdInit(cfg)
+	case "create":
+		if len(args) < 2 {
+			return fmt.Errorf("usage: mvncfg create <profile>")
+		}
+		cfg, err := config.New()
+		if err != nil {
+			return err
+		}
+		return cmdCreate(cfg, args[1])
 	case "help", "--help", "-h":
 		printHelp(args[1:])
 		return nil
@@ -163,6 +178,14 @@ func cmdInit(cfg *config.M2Config) error {
 		return err
 	}
 	fmt.Println("Initialized mvncfg with a default profile")
+	return nil
+}
+
+func cmdCreate(cfg *config.M2Config, name string) error {
+	if err := profile.Create(cfg, name); err != nil {
+		return err
+	}
+	fmt.Printf("Created profile %s\n", name)
 	return nil
 }
 
