@@ -96,18 +96,8 @@ var publicCommands = []commandInfo{
 	},
 }
 
-// hiddenCommands are functional but not listed in the help output.
-var hiddenCommands = []commandInfo{
-	{
-		name:        "completion",
-		usage:       "mvncfg completion <bash|zsh>",
-		description: "Print the raw completion script for the given shell.",
-		example:     "mvncfg completion bash",
-	},
-}
-
 func allCommands() []commandInfo {
-	return append(publicCommands, hiddenCommands...)
+	return publicCommands
 }
 
 func main() {
