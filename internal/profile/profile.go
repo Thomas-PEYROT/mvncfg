@@ -6,11 +6,29 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 
 	"github.com/Thomas-PEYROT/mvncfg/internal/config"
 )
+
+// profileNameRegexp matches valid profile names: letters, digits, '.', '_', and '-'.
+var profileNameRegexp = regexp.MustCompile(`^[a-zA-Z0-9._-]+$`)
+
+// validateProfileName returns an error if name is empty, reserved, or contains forbidden characters.
+func validateProfileName(name string) error {
+	if strings.TrimSpace(name) == "" {
+		return fmt.Errorf("profile name cannot be empty")
+	}
+	if name == "." || name == ".." {
+		return fmt.Errorf("invalid profile name %q: reserved name", name)
+	}
+	if !profileNameRegexp.MatchString(name) {
+		return fmt.Errorf("invalid profile name %q: only letters, digits, '.', '_', and '-' are allowed", name)
+	}
+	return nil
+}
 
 // List returns the names of all available profiles, sorted alphabetically.
 func List(cfg *config.M2Config) ([]string, error) {
@@ -59,6 +77,10 @@ func Current(cfg *config.M2Config) (string, error) {
 
 // Use activates the given profile by symlinking settings.xml to it.
 func Use(cfg *config.M2Config, name string) error {
+	if err := validateProfileName(name); err != nil {
+		return err
+	}
+
 	profilePath := cfg.ProfilePath(name)
 	if _, err := os.Stat(profilePath); err != nil {
 		if errors.Is(err, os.ErrNotExist) {
@@ -228,8 +250,8 @@ func Init(cfg *config.M2Config) error {
 // Create creates a new profile with a default settings.xml template.
 // It returns an error if the profile already exists.
 func Create(cfg *config.M2Config, name string) error {
-	if strings.TrimSpace(name) == "" {
-		return fmt.Errorf("profile name cannot be empty")
+	if err := validateProfileName(name); err != nil {
+		return err
 	}
 
 	profilesDir := cfg.ProfilesDir()
@@ -254,8 +276,8 @@ func Create(cfg *config.M2Config, name string) error {
 // Delete removes a profile file.
 // It refuses to delete the currently active profile to avoid breaking the settings.xml symlink.
 func Delete(cfg *config.M2Config, name string) error {
-	if strings.TrimSpace(name) == "" {
-		return fmt.Errorf("profile name cannot be empty")
+	if err := validateProfileName(name); err != nil {
+		return err
 	}
 
 	current, err := Current(cfg)
@@ -281,8 +303,11 @@ func Delete(cfg *config.M2Config, name string) error {
 // Rename renames a profile. If the renamed profile is the active one,
 // the settings.xml symlink is updated to point to the new name.
 func Rename(cfg *config.M2Config, oldName, newName string) error {
-	if strings.TrimSpace(oldName) == "" || strings.TrimSpace(newName) == "" {
-		return fmt.Errorf("profile names cannot be empty")
+	if err := validateProfileName(oldName); err != nil {
+		return err
+	}
+	if err := validateProfileName(newName); err != nil {
+		return err
 	}
 	if oldName == newName {
 		return fmt.Errorf("old and new profile names are the same")

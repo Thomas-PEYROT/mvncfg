@@ -107,6 +107,17 @@ func TestCurrent_RefusesNonXMLTarget(t *testing.T) {
 	}
 }
 
+func TestUse_InvalidName(t *testing.T) {
+	cfg := setupTestConfig(t)
+
+	for _, name := range []string{"", "  ", "foo/bar", "foo bar", ".."} {
+		err := Use(cfg, name)
+		if err == nil {
+			t.Errorf("expected an error for profile name %q", name)
+		}
+	}
+}
+
 func TestUse_UnknownProfile(t *testing.T) {
 	cfg := setupTestConfig(t)
 
@@ -216,12 +227,14 @@ func TestInit_KeepsExistingSymlink(t *testing.T) {
 	}
 }
 
-func TestCreate_EmptyName(t *testing.T) {
+func TestCreate_InvalidName(t *testing.T) {
 	cfg := setupTestConfig(t)
 
-	err := Create(cfg, "   ")
-	if err == nil {
-		t.Fatal("expected an error for empty profile name")
+	for _, name := range []string{"", "   ", "foo/bar", "foo bar", ".."} {
+		err := Create(cfg, name)
+		if err == nil {
+			t.Errorf("expected an error for profile name %q", name)
+		}
 	}
 }
 
@@ -254,12 +267,14 @@ func TestCreate_DuplicateProfile(t *testing.T) {
 	}
 }
 
-func TestDelete_EmptyName(t *testing.T) {
+func TestDelete_InvalidName(t *testing.T) {
 	cfg := setupTestConfig(t)
 
-	err := Delete(cfg, "")
-	if err == nil {
-		t.Fatal("expected an error for empty profile name")
+	for _, name := range []string{"", "   ", "foo/bar", "foo bar", ".."} {
+		err := Delete(cfg, name)
+		if err == nil {
+			t.Errorf("expected an error for profile name %q", name)
+		}
 	}
 }
 
@@ -300,26 +315,26 @@ func TestDelete_ActiveProfile(t *testing.T) {
 	}
 }
 
-func TestRename_Validation(t *testing.T) {
+func TestRename_InvalidName(t *testing.T) {
 	cfg := setupTestConfig(t)
+	createProfileFile(t, cfg, "old", "<settings/>")
 
 	cases := []struct {
-		name    string
 		oldName string
 		newName string
 	}{
-		{"empty old", "", "new"},
-		{"empty new", "old", ""},
-		{"same name", "same", "same"},
+		{"", "new"},
+		{"old", ""},
+		{"old", "foo/bar"},
+		{"foo/bar", "old"},
+		{"old", "old"},
 	}
 
 	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			err := Rename(cfg, tc.oldName, tc.newName)
-			if err == nil {
-				t.Fatal("expected an error")
-			}
-		})
+		err := Rename(cfg, tc.oldName, tc.newName)
+		if err == nil {
+			t.Errorf("expected an error for rename %q -> %q", tc.oldName, tc.newName)
+		}
 	}
 }
 
