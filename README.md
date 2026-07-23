@@ -98,7 +98,6 @@ mvncfg create <profile>      # create a new profile from a default template
 mvncfg delete <profile>      # delete a profile (not the active one)
 mvncfg rename <old> <new>    # rename a profile
 mvncfg install-completion    # install shell completion
-mvncfg completion <bash|zsh> # print the raw completion script
 mvncfg help [command]        # show help
 mvncfg version               # show version
 mvncfg --version             # show version
