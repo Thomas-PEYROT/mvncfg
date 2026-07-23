@@ -44,7 +44,7 @@ func Current(cfg *config.M2Config) (string, error) {
 	target, err := os.Readlink(cfg.SettingsPath())
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			return "", fmt.Errorf("no active settings.xml")
+			return "", fmt.Errorf("no active settings.xml: %w", err)
 		}
 		return "", fmt.Errorf("cannot read settings.xml symlink: %w", err)
 	}
@@ -206,6 +206,12 @@ func Init(cfg *config.M2Config) error {
 		} else {
 			return fmt.Errorf("cannot access default profile: %w", err)
 		}
+	}
+
+	// If settings.xml is already a symlink, keep the existing target profile intact
+	// and just ensure the default profile exists for future use.
+	if err == nil && info.Mode()&os.ModeSymlink != 0 {
+		return nil
 	}
 
 	// Ensure settings.xml points to the default profile.
