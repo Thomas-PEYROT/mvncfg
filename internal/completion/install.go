@@ -36,7 +36,11 @@ func installZsh() error {
 		return fmt.Errorf("cannot determine home directory: %w", err)
 	}
 
-	completionDir := filepath.Join(home, ".config", "zsh", "completions")
+	completionDir, usesOhMyZsh, err := zshCompletionDir(home)
+	if err != nil {
+		return err
+	}
+
 	if err := os.MkdirAll(completionDir, 0o755); err != nil {
 		return fmt.Errorf("cannot create completion directory: %w", err)
 	}
@@ -47,24 +51,45 @@ func installZsh() error {
 	}
 
 	rcPath := filepath.Join(home, ".zshrc")
-	lines := []string{
-		"# mvncfg completion",
-		"fpath+=" + completionDir,
-		"autoload -Uz compinit && compinit",
-	}
-	added, err := appendMissingLines(rcPath, lines)
-	if err != nil {
-		return fmt.Errorf("cannot update %s: %w", rcPath, err)
+	var added []string
+	if !usesOhMyZsh {
+		lines := []string{
+			"# mvncfg completion",
+			"fpath+=" + completionDir,
+			"autoload -Uz compinit && compinit",
+		}
+		added, err = appendMissingLines(rcPath, lines)
+		if err != nil {
+			return fmt.Errorf("cannot update %s: %w", rcPath, err)
+		}
 	}
 
 	fmt.Printf("Installed zsh completion to %s\n", scriptPath)
+	if usesOhMyZsh {
+		fmt.Println("Oh My Zsh detected: completion will be loaded automatically.")
+	}
 	if len(added) > 0 {
 		fmt.Printf("Added to %s:\n%s\n", rcPath, strings.Join(added, "\n"))
-	} else {
+	} else if !usesOhMyZsh {
 		fmt.Printf("No changes needed in %s\n", rcPath)
 	}
 	fmt.Println("Reload your shell or run: source ~/.zshrc")
 	return nil
+}
+
+// zshCompletionDir returns the directory where the zsh completion script should be installed.
+// If Oh My Zsh is detected (ZSH env var points to an existing oh-my-zsh.sh), it returns
+// $ZSH/custom/completions and reports usesOhMyZsh=true. Otherwise it returns the generic
+// ~/.config/zsh/completions directory and reports usesOhMyZsh=false.
+func zshCompletionDir(home string) (string, bool, error) {
+	if zshRoot := os.Getenv("ZSH"); zshRoot != "" {
+		if _, err := os.Stat(filepath.Join(zshRoot, "oh-my-zsh.sh")); err == nil {
+			return filepath.Join(zshRoot, "custom", "completions"), true, nil
+		} else if !os.IsNotExist(err) {
+			return "", false, fmt.Errorf("cannot check Oh My Zsh installation: %w", err)
+		}
+	}
+	return filepath.Join(home, ".config", "zsh", "completions"), false, nil
 }
 
 func installBash() error {

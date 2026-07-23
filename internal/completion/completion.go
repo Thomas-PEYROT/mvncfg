@@ -34,25 +34,25 @@ complete -F _mvncfg mvncfg
 
 const zshCompletion = `#compdef mvncfg
 
-local -a cmd_list shell_list
-cmd_list=(
-    'init:initialize the profiles directory and default profile'
-    'list:list available profiles'
-    'current:show the active profile'
-    'use:activate a profile'
-    'create:create a new profile from a default template'
-    'delete:delete a profile'
-    'rename:rename a profile'
-    'install-completion:install shell completion'
-    'completion:print the raw completion script'
-    'help:show help for a command'
-    'version:show the version'
-)
-shell_list=(bash zsh)
-
 _mvncfg() {
     local curcontext=$curcontext state line
     typeset -A opt_args
+
+    local -a cmd_list shell_list
+    cmd_list=(
+        'init:initialize the profiles directory and default profile'
+        'list:list available profiles'
+        'current:show the active profile'
+        'use:activate a profile'
+        'create:create a new profile from a default template'
+        'delete:delete a profile'
+        'rename:rename a profile'
+        'install-completion:install shell completion'
+        'completion:print the raw completion script'
+        'help:show help for a command'
+        'version:show the version'
+    )
+    shell_list=(bash zsh)
 
     _arguments -C \
         '1: :->command' \
@@ -65,7 +65,9 @@ _mvncfg() {
         args)
             case "$line[1]" in
                 use|rename)
-                    _values 'profiles' $(mvncfg list)
+                    local -a profiles
+                    profiles=(${(f)"$(mvncfg list)"})
+                    _describe -t profiles 'profiles' profiles
                     ;;
                 completion)
                     _describe -t shells 'shell' shell_list
@@ -77,6 +79,4 @@ _mvncfg() {
             ;;
     esac
 }
-
-compdef _mvncfg mvncfg
 `
