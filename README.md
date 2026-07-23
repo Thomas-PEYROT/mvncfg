@@ -9,6 +9,21 @@
 
 A tiny CLI to switch between Maven `settings.xml` profiles using symlinks.
 
+## Table of contents
+
+- [Features](#features)
+- [Requirements](#requirements)
+- [Installation](#installation)
+  - [Quick install](#quick-install)
+  - [Using `go install`](#using-go-install)
+  - [From a GitHub release](#from-a-github-release)
+  - [From source](#from-source)
+- [Shell completion](#shell-completion)
+- [Usage](#usage)
+- [File layout](#file-layout)
+- [Development](#development)
+- [Platform support](#platform-support)
+
 ## Features
 
 - `init` — initialize the `~/.m2/profiles` directory and a default profile.
