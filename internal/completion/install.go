@@ -48,7 +48,6 @@ func installZsh() error {
 
 	rcPath := filepath.Join(home, ".zshrc")
 	lines := []string{
-		"",
 		"# mvncfg completion",
 		"fpath+=" + completionDir,
 		"autoload -Uz compinit && compinit",
@@ -76,7 +75,6 @@ func installBash() error {
 
 	rcPath := filepath.Join(home, ".bashrc")
 	lines := []string{
-		"",
 		"# mvncfg completion",
 		"source <(mvncfg completion bash)",
 	}
@@ -95,6 +93,8 @@ func installBash() error {
 }
 
 // appendMissingLines appends only the lines that are not already present in the file.
+// A line is considered present only if it matches an entire existing line (ignoring leading/trailing whitespace).
+// If the file already exists and is not empty, a blank separator line is inserted before the new lines.
 func appendMissingLines(path string, lines []string) ([]string, error) {
 	content, err := os.ReadFile(path)
 	if err != nil && !os.IsNotExist(err) {
@@ -102,9 +102,21 @@ func appendMissingLines(path string, lines []string) ([]string, error) {
 	}
 	existing := string(content)
 
+	existingLines := make(map[string]struct{})
+	for _, line := range strings.Split(existing, "\n") {
+		trimmed := strings.TrimSpace(line)
+		if trimmed != "" {
+			existingLines[trimmed] = struct{}{}
+		}
+	}
+
 	var missing []string
 	for _, line := range lines {
-		if !strings.Contains(existing, line) {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" {
+			continue
+		}
+		if _, ok := existingLines[trimmed]; !ok {
 			missing = append(missing, line)
 		}
 	}
@@ -119,7 +131,12 @@ func appendMissingLines(path string, lines []string) ([]string, error) {
 	}
 	defer f.Close()
 
-	if len(existing) > 0 && !strings.HasSuffix(existing, "\n") {
+	if len(existing) > 0 {
+		if !strings.HasSuffix(existing, "\n") {
+			if _, err := f.WriteString("\n"); err != nil {
+				return nil, err
+			}
+		}
 		if _, err := f.WriteString("\n"); err != nil {
 			return nil, err
 		}
