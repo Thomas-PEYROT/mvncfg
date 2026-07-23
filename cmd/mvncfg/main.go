@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"runtime/debug"
 	"strings"
 
 	"github.com/Thomas-PEYROT/mvncfg/internal/completion"
@@ -17,8 +18,20 @@ type commandInfo struct {
 	example     string
 }
 
-// version is set at build time via -ldflags.
+// version is set at build time via -ldflags. If not set, go module version is used as a fallback.
 var version = "dev"
+
+func getVersion() string {
+	if version != "dev" {
+		return version
+	}
+	if info, ok := debug.ReadBuildInfo(); ok {
+		if info.Main.Version != "" && info.Main.Version != "(devel)" {
+			return info.Main.Version
+		}
+	}
+	return version
+}
 
 var commands = []commandInfo{
 	{
@@ -165,7 +178,7 @@ func run(args []string) error {
 		}
 		return cmdRename(cfg, args[1], args[2])
 	case "version", "--version", "-v":
-		fmt.Println(version)
+		fmt.Println(getVersion())
 		return nil
 	case "help", "--help", "-h":
 		printHelp(args[1:])
