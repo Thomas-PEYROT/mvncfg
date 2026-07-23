@@ -96,8 +96,18 @@ var publicCommands = []commandInfo{
 	},
 }
 
-func allCommands() []commandInfo {
-	return publicCommands
+// commandHandler executes a command given the resolved config and remaining arguments.
+type commandHandler func(cfg *config.M2Config, args []string) error
+
+var commands = map[string]commandHandler{
+	"init":               cmdInit,
+	"list":               cmdList,
+	"current":            cmdCurrent,
+	"use":                cmdUse,
+	"create":             cmdCreate,
+	"delete":             cmdDelete,
+	"rename":             cmdRename,
+	"install-completion": cmdInstallCompletion,
 }
 
 func main() {
@@ -114,79 +124,33 @@ func run(args []string) error {
 	}
 
 	switch args[0] {
-	case "list":
-		cfg, err := config.New()
-		if err != nil {
-			return err
-		}
-		return cmdList(cfg)
-	case "current":
-		cfg, err := config.New()
-		if err != nil {
-			return err
-		}
-		return cmdCurrent(cfg)
-	case "use":
-		if len(args) < 2 {
-			return fmt.Errorf("usage: mvncfg use <profile>")
-		}
-		cfg, err := config.New()
-		if err != nil {
-			return err
-		}
-		return cmdUse(cfg, args[1])
-	case "completion":
-		if len(args) < 2 {
-			return fmt.Errorf("usage: mvncfg completion <bash|zsh>")
-		}
-		return cmdCompletion(args[1])
-	case "install-completion":
-		return completion.Install()
-	case "init":
-		cfg, err := config.New()
-		if err != nil {
-			return err
-		}
-		return cmdInit(cfg)
-	case "create":
-		if len(args) < 2 {
-			return fmt.Errorf("usage: mvncfg create <profile>")
-		}
-		cfg, err := config.New()
-		if err != nil {
-			return err
-		}
-		return cmdCreate(cfg, args[1])
-	case "delete":
-		if len(args) < 2 {
-			return fmt.Errorf("usage: mvncfg delete <profile>")
-		}
-		cfg, err := config.New()
-		if err != nil {
-			return err
-		}
-		return cmdDelete(cfg, args[1])
-	case "rename":
-		if len(args) < 3 {
-			return fmt.Errorf("usage: mvncfg rename <old> <new>")
-		}
-		cfg, err := config.New()
-		if err != nil {
-			return err
-		}
-		return cmdRename(cfg, args[1], args[2])
 	case "version", "--version", "-v":
 		fmt.Println(getVersion())
 		return nil
 	case "help", "--help", "-h":
 		printHelp(args[1:])
 		return nil
-	default:
+	case "completion":
+		if len(args) < 2 {
+			return fmt.Errorf("usage: mvncfg completion <bash|zsh>")
+		}
+		return cmdCompletion(args[1])
+	}
+
+	handler, ok := commands[args[0]]
+	if !ok {
 		return fmt.Errorf("unknown command: %s\n\n%s", args[0], usageText())
 	}
+
+	cfg, err := config.New()
+	if err != nil {
+		return err
+	}
+
+	return handler(cfg, args[1:])
 }
 
-func cmdList(cfg *config.M2Config) error {
+func cmdList(cfg *config.M2Config, _ []string) error {
 	profiles, err := profile.List(cfg)
 	if err != nil {
 		return err
@@ -197,7 +161,7 @@ func cmdList(cfg *config.M2Config) error {
 	return nil
 }
 
-func cmdCurrent(cfg *config.M2Config) error {
+func cmdCurrent(cfg *config.M2Config, _ []string) error {
 	current, err := profile.Current(cfg)
 	if err != nil {
 		return err
@@ -206,12 +170,60 @@ func cmdCurrent(cfg *config.M2Config) error {
 	return nil
 }
 
-func cmdUse(cfg *config.M2Config, name string) error {
-	if err := profile.Use(cfg, name); err != nil {
+func cmdUse(cfg *config.M2Config, args []string) error {
+	if len(args) < 1 {
+		return fmt.Errorf("usage: mvncfg use <profile>")
+	}
+	if err := profile.Use(cfg, args[0]); err != nil {
 		return err
 	}
-	fmt.Printf("Switched to %s\n", name)
+	fmt.Printf("Switched to %s\n", args[0])
 	return nil
+}
+
+func cmdCreate(cfg *config.M2Config, args []string) error {
+	if len(args) < 1 {
+		return fmt.Errorf("usage: mvncfg create <profile>")
+	}
+	if err := profile.Create(cfg, args[0]); err != nil {
+		return err
+	}
+	fmt.Printf("Created profile %s\n", args[0])
+	return nil
+}
+
+func cmdDelete(cfg *config.M2Config, args []string) error {
+	if len(args) < 1 {
+		return fmt.Errorf("usage: mvncfg delete <profile>")
+	}
+	if err := profile.Delete(cfg, args[0]); err != nil {
+		return err
+	}
+	fmt.Printf("Deleted profile %s\n", args[0])
+	return nil
+}
+
+func cmdRename(cfg *config.M2Config, args []string) error {
+	if len(args) < 2 {
+		return fmt.Errorf("usage: mvncfg rename <old> <new>")
+	}
+	if err := profile.Rename(cfg, args[0], args[1]); err != nil {
+		return err
+	}
+	fmt.Printf("Renamed profile %s to %s\n", args[0], args[1])
+	return nil
+}
+
+func cmdInit(cfg *config.M2Config, _ []string) error {
+	if err := profile.Init(cfg); err != nil {
+		return err
+	}
+	fmt.Println("Initialized mvncfg with a default profile")
+	return nil
+}
+
+func cmdInstallCompletion(_ *config.M2Config, _ []string) error {
+	return completion.Install()
 }
 
 func cmdCompletion(shell string) error {
@@ -223,38 +235,6 @@ func cmdCompletion(shell string) error {
 	default:
 		return fmt.Errorf("unsupported shell: %s (supported: bash, zsh)", shell)
 	}
-	return nil
-}
-
-func cmdInit(cfg *config.M2Config) error {
-	if err := profile.Init(cfg); err != nil {
-		return err
-	}
-	fmt.Println("Initialized mvncfg with a default profile")
-	return nil
-}
-
-func cmdCreate(cfg *config.M2Config, name string) error {
-	if err := profile.Create(cfg, name); err != nil {
-		return err
-	}
-	fmt.Printf("Created profile %s\n", name)
-	return nil
-}
-
-func cmdDelete(cfg *config.M2Config, name string) error {
-	if err := profile.Delete(cfg, name); err != nil {
-		return err
-	}
-	fmt.Printf("Deleted profile %s\n", name)
-	return nil
-}
-
-func cmdRename(cfg *config.M2Config, oldName, newName string) error {
-	if err := profile.Rename(cfg, oldName, newName); err != nil {
-		return err
-	}
-	fmt.Printf("Renamed profile %s to %s\n", oldName, newName)
 	return nil
 }
 
@@ -281,7 +261,7 @@ func printHelp(args []string) {
 	}
 
 	name := args[0]
-	for _, cmd := range allCommands() {
+	for _, cmd := range publicCommands {
 		if cmd.name == name {
 			fmt.Printf("%s\n\n", cmd.usage)
 			fmt.Printf("Description:\n  %s\n\n", cmd.description)
