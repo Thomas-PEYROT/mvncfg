@@ -33,7 +33,7 @@ func getVersion() string {
 	return version
 }
 
-var commands = []commandInfo{
+var publicCommands = []commandInfo{
 	{
 		name:        "init",
 		usage:       "mvncfg init",
@@ -83,12 +83,6 @@ var commands = []commandInfo{
 		example:     "mvncfg install-completion",
 	},
 	{
-		name:        "completion",
-		usage:       "mvncfg completion <bash|zsh>",
-		description: "Print the raw completion script for the given shell.",
-		example:     "mvncfg completion bash",
-	},
-	{
 		name:        "help",
 		usage:       "mvncfg help [command]",
 		description: "Show this help message or detailed help for a command.",
@@ -100,6 +94,20 @@ var commands = []commandInfo{
 		description: "Show the version of mvncfg.",
 		example:     "mvncfg version",
 	},
+}
+
+// hiddenCommands are functional but not listed in the help output.
+var hiddenCommands = []commandInfo{
+	{
+		name:        "completion",
+		usage:       "mvncfg completion <bash|zsh>",
+		description: "Print the raw completion script for the given shell.",
+		example:     "mvncfg completion bash",
+	},
+}
+
+func allCommands() []commandInfo {
+	return append(publicCommands, hiddenCommands...)
 }
 
 func main() {
@@ -269,7 +277,7 @@ func usageText() string {
 	b.WriteString("mvncfg — switch between Maven settings.xml profiles\n\n")
 	b.WriteString("Usage:\n  mvncfg <command> [args]\n\n")
 	b.WriteString("Commands:\n")
-	for _, cmd := range commands {
+	for _, cmd := range publicCommands {
 		b.WriteString(fmt.Sprintf("  %-20s %s\n", cmd.name, cmd.description))
 	}
 	b.WriteString("\nRun 'mvncfg help <command>' for more information on a command.\n")
@@ -283,7 +291,7 @@ func printHelp(args []string) {
 	}
 
 	name := args[0]
-	for _, cmd := range commands {
+	for _, cmd := range allCommands() {
 		if cmd.name == name {
 			fmt.Printf("%s\n\n", cmd.usage)
 			fmt.Printf("Description:\n  %s\n\n", cmd.description)
