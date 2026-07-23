@@ -2,6 +2,10 @@
 
 [![CI](https://github.com/Thomas-PEYROT/mvncfg/actions/workflows/ci.yml/badge.svg)](https://github.com/Thomas-PEYROT/mvncfg/actions/workflows/ci.yml)
 [![Tests](https://github.com/Thomas-PEYROT/mvncfg/actions/workflows/tests.yml/badge.svg)](https://github.com/Thomas-PEYROT/mvncfg/actions/workflows/tests.yml)
+[![Release](https://img.shields.io/github/v/release/Thomas-PEYROT/mvncfg)](https://github.com/Thomas-PEYROT/mvncfg/releases)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/Thomas-PEYROT/mvncfg)](go.mod)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+![Platforms](https://img.shields.io/badge/platform-linux%20%7C%20macOS-blue)
 
 A tiny CLI to switch between Maven `settings.xml` profiles using symlinks.
 
