@@ -1,6 +1,7 @@
 # mvncfg
 
 [![CI](https://github.com/Thomas-PEYROT/mvncfg/actions/workflows/ci.yml/badge.svg)](https://github.com/Thomas-PEYROT/mvncfg/actions/workflows/ci.yml)
+[![Tests](https://github.com/Thomas-PEYROT/mvncfg/actions/workflows/tests.yml/badge.svg)](https://github.com/Thomas-PEYROT/mvncfg/actions/workflows/tests.yml)
 
 A tiny CLI to switch between Maven `settings.xml` profiles using symlinks.
 
