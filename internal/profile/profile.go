@@ -60,11 +60,23 @@ func List(cfg *config.M2Config) ([]string, error) {
 // Current returns the name of the profile currently active via the settings.xml symlink.
 // If there is no symlink or it cannot be resolved, it returns an empty string and an error.
 func Current(cfg *config.M2Config) (string, error) {
-	target, err := os.Readlink(cfg.SettingsPath())
+	settingsPath := cfg.SettingsPath()
+	info, err := os.Lstat(settingsPath)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			return "", fmt.Errorf("no active settings.xml: %w", err)
+			return "", fmt.Errorf("no active settings.xml; run mvncfg init: %w", err)
 		}
+		return "", fmt.Errorf("cannot inspect settings.xml: %w", err)
+	}
+	if info.Mode()&os.ModeSymlink == 0 {
+		if info.Mode().IsRegular() {
+			return "", fmt.Errorf("settings.xml is a regular file, not a symlink; run mvncfg init to migrate")
+		}
+		return "", fmt.Errorf("settings.xml is not a symlink; run mvncfg init to migrate")
+	}
+
+	target, err := os.Readlink(settingsPath)
+	if err != nil {
 		return "", fmt.Errorf("cannot read settings.xml symlink: %w", err)
 	}
 
@@ -91,6 +103,19 @@ func Use(cfg *config.M2Config, name string) error {
 	}
 
 	settingsPath := cfg.SettingsPath()
+	info, err := os.Lstat(settingsPath)
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		return fmt.Errorf("cannot inspect current settings.xml: %w", err)
+	}
+	if err == nil {
+		if info.Mode()&os.ModeSymlink == 0 {
+			if info.Mode().IsRegular() {
+				return fmt.Errorf("settings.xml is a regular file, not a symlink; run mvncfg init to migrate")
+			}
+			return fmt.Errorf("settings.xml is not a symlink; run mvncfg init to migrate")
+		}
+	}
+
 	if err := os.Remove(settingsPath); err != nil && !errors.Is(err, os.ErrNotExist) {
 		return fmt.Errorf("cannot replace current settings.xml: %w", err)
 	}

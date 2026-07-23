@@ -88,6 +88,21 @@ func TestCurrent_ReturnsActiveProfile(t *testing.T) {
 	}
 }
 
+func TestCurrent_RegularFile(t *testing.T) {
+	cfg := setupTestConfig(t)
+	if err := os.WriteFile(cfg.SettingsPath(), []byte("<settings/>"), 0o644); err != nil {
+		t.Fatalf("cannot write settings.xml: %v", err)
+	}
+
+	_, err := Current(cfg)
+	if err == nil {
+		t.Fatal("expected an error when settings.xml is a regular file")
+	}
+	if !strings.Contains(err.Error(), "run mvncfg init") {
+		t.Errorf("expected 'run mvncfg init' in error, got %q", err.Error())
+	}
+}
+
 func TestCurrent_RefusesNonXMLTarget(t *testing.T) {
 	cfg := setupTestConfig(t)
 	if err := os.MkdirAll(cfg.ProfilesDir(), 0o755); err != nil {
@@ -165,6 +180,22 @@ func TestUse_ReplacesExistingSymlink(t *testing.T) {
 	}
 	if target != cfg.ProfilePath("personal") {
 		t.Errorf("settings.xml points to %q, want %q", target, cfg.ProfilePath("personal"))
+	}
+}
+
+func TestUse_RegularSettingsFile(t *testing.T) {
+	cfg := setupTestConfig(t)
+	createProfileFile(t, cfg, "work", "<settings/>")
+	if err := os.WriteFile(cfg.SettingsPath(), []byte("<settings/>"), 0o644); err != nil {
+		t.Fatalf("cannot write settings.xml: %v", err)
+	}
+
+	err := Use(cfg, "work")
+	if err == nil {
+		t.Fatal("expected an error when settings.xml is a regular file")
+	}
+	if !strings.Contains(err.Error(), "run mvncfg init") {
+		t.Errorf("expected 'run mvncfg init' in error, got %q", err.Error())
 	}
 }
 
